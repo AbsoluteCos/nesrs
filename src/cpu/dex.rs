@@ -239,6 +239,136 @@ impl CPU {
                 self.rol(&mut val);
                 self.update_x_indexed_absolute(ab, val);
             }
+            0x40 => {
+                self.pc += 1;
+                self.rti();
+            }
+            0x41 => {
+                self.pc += 2;
+                self.eor(self.x_indexed_zero_page_indirect(a));
+            }
+            0x45 => {
+                self.pc += 2;
+                self.eor(self.zero_page(a));
+            }
+            0x46 => {
+                self.pc += 2;
+                let mut val = self.zero_page(a);
+                self.lsr(&mut val);
+                self.update_zero_page(a, val);
+            }
+            0x48 => {
+                self.pc += 1;
+                self.pha();
+            }
+            0x49 => {
+                self.pc += 2;
+                self.eor(a);
+            }
+            0x4A => {
+                self.pc += 1;
+                let mut val = self.acc;
+                self.lsr(&mut val);
+                self.acc = val;
+            }
+            0x4C => {
+                self.pc += 3;
+                self.jmp(ab);
+            }
+            0x4D => {
+                self.pc += 3;
+                self.eor(self.absolute(ab));
+            }
+            0x4E => {
+                self.pc += 3;
+                let mut val = self.absolute(ab);
+                self.lsr(&mut val);
+                self.update_absolute(ab, val);
+            }
+            0x50 => {
+                self.pc += 2;
+                self.bvc(a as i8);
+            }
+            0x51 => {
+                self.pc += 2;
+                self.eor(self.y_indexed_zero_page_indirect(a));
+            }
+            0x55 => {
+                self.pc += 2;
+                self.eor(self.x_indexed_zero_page(a));
+            }
+            0x56 => {
+                self.pc += 2;
+                let mut val = self.x_indexed_zero_page(a);
+                self.lsr(&mut val);
+                self.update_x_indexed_zero_page(a, val);
+            }
+            0x58 => {
+                self.pc += 1;
+                self.cli();
+            }
+            0x59 => {
+                self.pc += 3;
+                self.eor(self.y_indexed_absolute(ab));
+            }
+            0x5D => {
+                self.pc += 3;
+                self.eor(self.x_indexed_absolute(ab));
+            }
+            0x5E => {
+                self.pc += 3;
+                let mut val = self.x_indexed_absolute(ab);
+                self.lsr(&mut val);
+                self.update_x_indexed_absolute(ab, val);
+            }
+            0x60 => {
+                self.pc += 1;
+                self.rts();
+            }
+            0x61 => {
+                self.pc += 2;
+                self.adc(self.x_indexed_zero_page_indirect(a));
+            }
+            0x65 => {
+                self.pc += 2;
+                self.adc(self.zero_page(a));
+            }
+            0x66 => {
+                self.pc += 2;
+                let mut val = self.zero_page(a);
+                self.ror(&mut val);
+                self.update_zero_page(a, val);
+            }
+            0x68 => {
+                self.pc += 1;
+                self.pla();
+            }
+            0x69 => {
+                self.pc += 2;
+                self.adc(a);
+            }
+            0x6A => {
+                self.pc += 1;
+                let mut val = self.acc;
+                self.ror(&mut val);
+                self.acc = val;
+            }
+            0x6C => {
+                self.pc += 3;
+                let addr = self.ram.borrow().read(ab) as u16
+                    | ((self.ram.borrow().read(ab + 1) as u16) << 8);
+                self.jmp(addr);
+            }
+            0x6D => {
+                self.pc += 3;
+                self.adc(self.absolute(ab));
+            }
+            0x6E => {
+                self.pc += 3;
+                let mut val = self.absolute(ab);
+                self.ror(&mut val);
+                self.update_absolute(ab, val);
+            }
 
             op => panic!("Unsupported opcode {op}"),
         }
