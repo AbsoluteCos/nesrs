@@ -69,6 +69,32 @@ impl CPU {
         self.ram.borrow().read(addr)
     }
 
+    fn x_indexed_absolute_address(&self, ab: u16) -> u16 {
+        ab + self.x as u16
+    }
+
+    fn y_indexed_absolute_address(&self, ab: u16) -> u16 {
+        ab + self.y as u16
+    }
+
+    fn zero_page_address(&self, a: u8) -> u16 {
+        a as u16
+    }
+
+    fn x_indexed_zero_page_address(&self, a: u8) -> u16 {
+        (a.wrapping_add(self.x)) as u16
+    }
+
+    fn x_indexed_zero_page_indirect_address(&self, a: u8) -> u16 {
+        let addr = (a.wrapping_add(self.x)) as u16;
+        self.ram.borrow().read(addr) as u16 | ((self.ram.borrow().read(addr + 1) as u16) << 8)
+    }
+
+    fn y_indexed_zero_page_indirect_address(&self, a: u8) -> u16 {
+        let addr = (a.wrapping_add(self.y)) as u16;
+        self.ram.borrow().read(addr) as u16 | ((self.ram.borrow().read(addr + 1) as u16) << 8)
+    }
+
     pub fn decode_and_execute(&mut self) {
         let instruction = self.ram.borrow().read(self.pc);
         let a = self.ram.borrow().read(self.pc + 1);
@@ -368,6 +394,46 @@ impl CPU {
                 let mut val = self.absolute(ab);
                 self.ror(&mut val);
                 self.update_absolute(ab, val);
+            }
+            0x70 => {
+                self.pc += 2;
+                self.bvs(a as i8);
+            }
+            0x71 => {
+                self.pc += 2;
+                self.adc(self.y_indexed_zero_page_indirect(a));
+            }
+            0x75 => {
+                self.pc += 2;
+                self.adc(self.x_indexed_zero_page(a));
+            }
+            0x76 => {
+                self.pc += 2;
+                let mut val = self.x_indexed_zero_page(a);
+                self.ror(&mut val);
+                self.update_x_indexed_zero_page(a, val);
+            }
+            0x78 => {
+                self.pc += 1;
+                self.sei();
+            }
+            0x79 => {
+                self.pc += 3;
+                self.adc(self.y_indexed_absolute(ab));
+            }
+            0x7D => {
+                self.pc += 3;
+                self.adc(self.x_indexed_absolute(ab));
+            }
+            0x7E => {
+                self.pc += 3;
+                let mut val = self.x_indexed_absolute(ab);
+                self.ror(&mut val);
+                self.update_x_indexed_absolute(ab, val);
+            }
+            0x81 => {
+                self.pc += 2;
+                self.sta(addr);
             }
 
             op => panic!("Unsupported opcode {op}"),
